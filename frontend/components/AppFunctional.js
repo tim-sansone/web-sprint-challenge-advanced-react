@@ -33,23 +33,24 @@ export default function AppFunctional({ className }) {
     return indicies[xy[1] - 1][xy[0] - 1];
   }
 
-  // determines new index based on move received from direction buttons
-  // returns an error message if attempting to go out of bounds or the new xy
+  // determines new xy based on move received from direction buttons
+  // returns the new xy and an error message if attempting to go out of bounds
   const getNextXY = (move) => {
     
-    const next = move.map((each, index) => each + state.xy[index]);
+    const { xy } = state;
+    const next = move.map((each, index) => each + xy[index]);
 
     if(next[0] === 0){
-      return [null, "You can't go left"];
+      return [xy, "You can't go left"];
 
     } else if(next[0] === 4){
-        return [null, "You can't go right"];
+        return [xy, "You can't go right"];
 
     } else if(next[1] === 0){
-        return [null, "You can't go up"];
+        return [xy, "You can't go up"];
 
     } else if(next[1] === 4){
-        return [null, "You can't go down"];
+        return [xy, "You can't go down"];
 
     } else {
         return [next, ''];
@@ -57,24 +58,17 @@ export default function AppFunctional({ className }) {
 
   }
 
-  // calls getNextIndex to receive a new index or an error
+  // calls getNextXY to receive a new xy and message
   // sets state accordingly
   const move = (move) => {
-    const [next, error] = getNextXY(move);
+    const [xy, message] = getNextXY(move);
     
-    if(error){
-      setState({
-        ...state,
-        message: error
-      })
-    } else {
-      setState({
-        ...state,
-        xy: next,
-        steps: state.steps + 1,
-        message: ''
-      })
-    }
+    setState({
+      ...state,
+      steps: message ? state.steps : state.steps + 1,
+      xy,
+      message
+    })
   }
 
   // handle email type input

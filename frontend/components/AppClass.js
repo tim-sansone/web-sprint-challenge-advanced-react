@@ -34,23 +34,24 @@ export default class AppClass extends React.Component {
     return indicies[xy[1] - 1][xy[0] - 1];
   }
 
-  // determines new index based on move received from direction buttons
-  // returns an error message if attempting to go out of bounds or the new xy
+  // determines new xy based on move received from direction buttons
+  // returns the new xy and an error message if attempting to go out of bounds
   getNextXY = (move) => {
-  
-    const next = move.map((each, index) => each + this.state.xy[index]);
+    
+    const { xy } = this.state;
+    const next = move.map((each, index) => each + xy[index]);
     
     if(next[0] === 0){
-      return [null, "You can't go left"];
+      return [xy, "You can't go left"];
 
     } else if(next[0] === 4){
-        return [null, "You can't go right"];
+        return [xy, "You can't go right"];
 
     } else if(next[1] === 0){
-        return [null, "You can't go up"];
+        return [xy, "You can't go up"];
 
     } else if(next[1] === 4){
-        return [null, "You can't go down"];
+        return [xy, "You can't go down"];
 
     } else {
         return [next, ''];
@@ -58,24 +59,17 @@ export default class AppClass extends React.Component {
 
   }
 
-  // calls getNextIndex to receive a new index or an error
+  // calls getNextXY to receive a new xy and message
   // sets state accordingly
   move = (move) => {
-    const [next, error] = this.getNextXY(move);
+    const [xy, message] = this.getNextXY(move);
 
-    if(error){
-      this.setState({
-        ...this.state,
-        message: error
-      })
-    } else {
-      this.setState({
-        ...this.state,
-        xy: next,
-        steps: this.state.steps + 1,
-        message: ''
-      })
-    }
+    this.setState({
+      ...this.state,
+      steps: message ? this.state.steps : this.state.steps + 1,
+      xy,
+      message
+    })
   }
 
 
