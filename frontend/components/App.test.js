@@ -48,3 +48,29 @@ test("typing in the input results in its value changing", async () => {
   const testInput = screen.getByDisplayValue("This is my test input");
   expect(testInput).toBeInTheDocument();
 })
+
+// test("if player plays the game correctly the win message displays", async () => {
+//   render(<AppClass />)
+
+//   const rightButton = screen.getByText(/right/i);
+//   const downButton = screen.getByText(/down/i);
+//   const emailInput = screen.getByPlaceholderText(/type email/i);
+//   const submitButton = document.querySelector("#submit");
+
+//   await userEvent.click(rightButton);
+//   await userEvent.click(downButton);
+//   await userEvent.type(emailInput, "john@doe.com");
+//   await userEvent.click(submitButton);
+  
+//   const messageField = document.querySelector("#message");
+//   console.log(messageField).textContent;
+
+  
+//   await userEvent.type(emailInput, "john@doe.com")
+  
+  
+
+//   const message = screen.getByText("john win #72");
+//   expect(message).toBeInTheDocument();
+
+// })

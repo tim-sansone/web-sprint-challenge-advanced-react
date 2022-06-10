@@ -1,78 +1,68 @@
 import React from 'react';
 import axios from "axios";
 
+
 const initialState = {
-  index: 4,
+  xy: [2, 2],
   steps: 0,
   email: '',
   message: ''
 }
 
-const displayXY = [[1, 1], [2, 1], [3, 1],
-                   [1, 2], [2, 2], [3, 2],
-                   [1, 3], [2, 3], [3, 3]]
+// posible moves
+const up = [0, -1];
+const down = [0, 1];
+const left = [-1, 0];
+const right = [1, 0];
 
-const indexGrid = [[0, 1, 2],
+// matrix of indicies for getting index from xy 
+const indicies = [[0, 1, 2],
                    [3, 4, 5],
                    [6, 7, 8]]
+
 
 export default class AppClass extends React.Component {
 
   state = initialState;
 
-  getX = index => {
-    return displayXY[index][0];
-  }
-
-  getY = index => {
-    return displayXY[index][1];
-  }
-
-  getXYmessage = index => {
-    const x = this.getX(index);
-    const y = this.getY(index);
-    return `Coordinates (${x}, ${y})`;
-  }
-
   reset = () => {
     this.setState(initialState)    
   }
 
-  getYX = index => {
-    for(let y = 0; y < 3; y++){
-      for(let x = 0; x < 3; x++){
-        if(indexGrid[y][x] === index){
-          return [y, x];
-        }
-      }
-    }
+  getIndex = () => {
+    const { xy } = this.state;
+    return indicies[xy[1] - 1][xy[0] - 1];
   }
 
-  getNextIndex = (direction) => {
-    const current = this.getYX(this.state.index);
-    const next = direction.map((each, index) => each + current[index]);
+  // determines new index based on move received from direction buttons
+  // returns an error message if attempting to go out of bounds or the new xy
+  getNextXY = (move) => {
+  
+    const next = move.map((each, index) => each + this.state.xy[index]);
+    
+    if(next[0] === 0){
+      return [null, "You can't go left"];
 
-    if(next[0] === -1){
-      return [indexGrid[current[0]][current[1]], "You can't go up"];
+    } else if(next[0] === 4){
+        return [null, "You can't go right"];
 
-    } else if(next[0] === 3){
-        return [indexGrid[current[0]][current[1]], "You can't go down"];
+    } else if(next[1] === 0){
+        return [null, "You can't go up"];
 
-    } else if(next[1] === -1){
-        return [indexGrid[current[0]][current[1]], "You can't go left"];
-
-    } else if(next[1] === 3){
-        return [indexGrid[current[0]][current[1]], "You can't go right"];
+    } else if(next[1] === 4){
+        return [null, "You can't go down"];
 
     } else {
-        return [indexGrid[next[0]][next[1]], ""];
+        return [next, ''];
     }
 
   }
 
-  move = (direction) => {
-    const [index, error] = this.getNextIndex(direction);
-    
+  // calls getNextIndex to receive a new index or an error
+  // sets state accordingly
+  move = (move) => {
+    const [next, error] = this.getNextXY(move);
+
     if(error){
       this.setState({
         ...this.state,
@@ -81,13 +71,15 @@ export default class AppClass extends React.Component {
     } else {
       this.setState({
         ...this.state,
-        index,
+        xy: next,
         steps: this.state.steps + 1,
         message: ''
       })
     }
   }
 
+
+  // handle email type input
   onChange = event => {
     this.setState({
       ...this.state,
@@ -96,14 +88,16 @@ export default class AppClass extends React.Component {
   }
 
 
+  // create payload object gathing x,y coordinates, steps from state, and email from state
+  // post payload to API, set response message (either success or error) to state
   onSubmit = event => {
     event.preventDefault();
 
     const payload = {
-      "x": this.getX(this.state.index),
-      "y": this.getY(this.state.index),
-      "steps": this.state.steps,
-      "email": this.state.email.trim()
+      x: this.state.xy[0],
+      y: this.state.xy[1],
+      steps: this.state.steps,
+      email: this.state.email.trim()
     }
 
     axios.post("http://localhost:9000/api/result", payload)
@@ -118,8 +112,8 @@ export default class AppClass extends React.Component {
         this.setState({
           ...this.state,
           message: err.response.data.message
+        })
       })
-    })
   }
 
   render() {
@@ -127,14 +121,14 @@ export default class AppClass extends React.Component {
     return (
       <div id="wrapper" className={className}>
         <div className="info">
-          <h3 id="coordinates">{this.getXYmessage(this.state.index)}</h3>
+          <h3 id="coordinates">Coordinates ({this.state.xy[0]}, {this.state.xy[1]})</h3>
           <h3 id="steps">You moved {this.state.steps} time{this.state.steps === 1 ? '' : "s"}</h3>
         </div>
         <div id="grid">
           {
             [0, 1, 2, 3, 4, 5, 6, 7, 8].map(idx => (
-              <div key={idx} className={`square${idx === this.state.index ? ' active' : ''}`}>
-                {idx === this.state.index ? 'B' : null}
+              <div key={idx} className={`square${idx === this.getIndex() ? ' active' : ''}`}>
+                {idx === this.getIndex() ? 'B' : null}
               </div>
             ))
           }
@@ -143,10 +137,10 @@ export default class AppClass extends React.Component {
           <h3 id="message">{this.state.message}</h3>
         </div>
         <div id="keypad">
-          <button id="left" onClick={() => this.move([0, -1])}>LEFT</button>
-          <button id="up" onClick={() => this.move([-1, 0])}>UP</button>
-          <button id="right" onClick={() => this.move([0, 1])}>RIGHT</button>
-          <button id="down" onClick={() => this.move([1, 0])}>DOWN</button>
+          <button id="left" onClick={() => this.move(left)}>LEFT</button>
+          <button id="up" onClick={() => this.move(up)}>UP</button>
+          <button id="right" onClick={() => this.move(right)}>RIGHT</button>
+          <button id="down" onClick={() => this.move(down)}>DOWN</button>
           <button id="reset" onClick={this.reset}>reset</button>
         </div>
         <form onSubmit={this.onSubmit}>
