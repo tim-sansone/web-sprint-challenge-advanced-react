@@ -1,32 +1,37 @@
-import React from 'react'
-
-// Suggested initial states
-const initialMessage = ''
-const initialEmail = ''
-const initialSteps = 0
-const initialIndex = 4 // the index the "B" is at
+import React from 'react';
+import axios from "axios";
 
 const initialState = {
-  message: initialMessage,
-  email: initialEmail,
-  index: initialIndex,
-  steps: initialSteps,
+  index: 4,
+  steps: 0,
+  email: '',
+  message: ''
 }
 
-const displayXY = ["(1, 1)", "(1, 2)", "(1, 3)",
-                     "(2, 1)", "(2, 2)", "(2, 3)",
-                     "(3, 1)", "(3, 2)", "(3, 3)"]
+const displayXY = [[1, 1], [2, 1], [3, 1],
+                   [1, 2], [2, 2], [3, 2],
+                   [1, 3], [2, 3], [3, 3]]
 
 const indexGrid = [[0, 1, 2],
-                  [3, 4, 5],
-                  [6, 7, 8]]
+                   [3, 4, 5],
+                   [6, 7, 8]]
 
 export default class AppClass extends React.Component {
 
   state = initialState;
 
-  getDisplayXY = index => {
-    return displayXY[index];
+  getX = index => {
+    return displayXY[index][0];
+  }
+
+  getY = index => {
+    return displayXY[index][1];
+  }
+
+  getXYmessage = index => {
+    const x = this.getX(index);
+    const y = this.getY(index);
+    return `Coordinates (${x}, ${y})`;
   }
 
   reset = () => {
@@ -60,14 +65,14 @@ export default class AppClass extends React.Component {
         return [indexGrid[current[0]][current[1]], "You can't go right"];
 
     } else {
-      return [indexGrid[next[0]][next[1]], ""];
+        return [indexGrid[next[0]][next[1]], ""];
     }
 
   }
 
   move = (direction) => {
     const [index, error] = this.getNextIndex(direction);
-    console.log(index, error);
+    
     if(error){
       this.setState({
         ...this.state,
@@ -76,10 +81,9 @@ export default class AppClass extends React.Component {
     } else {
       this.setState({
         ...this.state,
-        message: initialMessage,
         index,
-        steps: this.state.steps + 1
-        
+        steps: this.state.steps + 1,
+        message: ''
       })
     }
   }
@@ -91,8 +95,31 @@ export default class AppClass extends React.Component {
     })
   }
 
-  onSubmit = (evt) => {
-    // Use a POST request to send a payload to the server.
+
+  onSubmit = event => {
+    event.preventDefault();
+
+    const payload = {
+      "x": this.getX(this.state.index),
+      "y": this.getY(this.state.index),
+      "steps": this.state.steps,
+      "email": this.state.email.trim()
+    }
+
+    axios.post("http://localhost:9000/api/result", payload)
+      .then(res => {
+        this.setState({
+          ...this.state,
+          email: '',
+          message: res.data.message
+        })
+      })
+      .catch(err => {
+        this.setState({
+          ...this.state,
+          message: err.response.data.message
+      })
+    })
   }
 
   render() {
@@ -100,8 +127,8 @@ export default class AppClass extends React.Component {
     return (
       <div id="wrapper" className={className}>
         <div className="info">
-          <h3 id="coordinates">Coordinates {this.getDisplayXY(this.state.index)}</h3>
-          <h3 id="steps">You moved {this.state.steps} times</h3>
+          <h3 id="coordinates">{this.getXYmessage(this.state.index)}</h3>
+          <h3 id="steps">You moved {this.state.steps} time{this.state.steps === 1 ? '' : "s"}</h3>
         </div>
         <div id="grid">
           {
@@ -122,7 +149,7 @@ export default class AppClass extends React.Component {
           <button id="down" onClick={() => this.move([1, 0])}>DOWN</button>
           <button id="reset" onClick={this.reset}>reset</button>
         </div>
-        <form>
+        <form onSubmit={this.onSubmit}>
           <input
             id="email"
             type="email"
