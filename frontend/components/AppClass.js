@@ -10,10 +10,10 @@ const initialState = {
 }
 
 // posible moves
-const up = [0, -1];
-const down = [0, 1];
-const left = [-1, 0];
-const right = [1, 0];
+const moveUp = [0, -1];
+const moveDown = [0, 1];
+const moveLeft = [-1, 0];
+const moveRight = [1, 0];
 
 // matrix of indicies for getting index from xy 
 const indicies = [[0, 1, 2],
@@ -25,53 +25,10 @@ export default class AppClass extends React.Component {
 
   state = initialState;
 
-  reset = () => {
-    this.setState(initialState)    
-  }
-
   getIndex = () => {
     const { xy } = this.state;
     return indicies[xy[1] - 1][xy[0] - 1];
   }
-
-  // determines new xy based on move received from direction buttons
-  // returns the new xy and an error message if attempting to go out of bounds
-  getNextXY = (move) => {
-    
-    const { xy } = this.state;
-    const next = move.map((each, index) => each + xy[index]);
-    
-    if(next[0] === 0){
-      return [xy, "You can't go left"];
-
-    } else if(next[0] === 4){
-        return [xy, "You can't go right"];
-
-    } else if(next[1] === 0){
-        return [xy, "You can't go up"];
-
-    } else if(next[1] === 4){
-        return [xy, "You can't go down"];
-
-    } else {
-        return [next, ''];
-    }
-
-  }
-
-  // calls getNextXY to receive a new xy and message
-  // sets state accordingly
-  move = (move) => {
-    const [xy, message] = this.getNextXY(move);
-
-    this.setState({
-      ...this.state,
-      steps: message ? this.state.steps : this.state.steps + 1,
-      xy,
-      message
-    })
-  }
-
 
   // handle email type input
   onChange = event => {
@@ -81,6 +38,44 @@ export default class AppClass extends React.Component {
     })
   }
 
+  // determines new xy based on move received from direction buttons
+  // returns the new xy and an error message if attempting to go out of bounds
+  getNewXY = (move) => {
+    
+    const { xy } = this.state;
+    const newXY = move.map((each, index) => each + xy[index]);
+    
+    if(newXY[0] === 0){
+      return [xy, "You can't go left"];
+
+    } else if(newXY[0] === 4){
+        return [xy, "You can't go right"];
+
+    } else if(newXY[1] === 0){
+        return [xy, "You can't go up"];
+
+    } else if(newXY[1] === 4){
+        return [xy, "You can't go down"];
+
+    } else {
+        return [newXY, ''];
+    }
+
+  }
+
+  // calls getNewXY to receive a new xy and message
+  // sets state accordingly
+  move = (move) => {
+    const [xy, message] = this.getNewXY(move);
+    const { steps } = this.state;
+
+    this.setState({
+      ...this.state,
+      steps: message ? steps : steps + 1,
+      xy,
+      message
+    })
+  }
 
   // create payload object gathing x,y coordinates, steps from state, and email from state
   // post payload to API, set response message (either success or error) to state
@@ -131,11 +126,11 @@ export default class AppClass extends React.Component {
           <h3 id="message">{this.state.message}</h3>
         </div>
         <div id="keypad">
-          <button id="left" onClick={() => this.move(left)}>LEFT</button>
-          <button id="up" onClick={() => this.move(up)}>UP</button>
-          <button id="right" onClick={() => this.move(right)}>RIGHT</button>
-          <button id="down" onClick={() => this.move(down)}>DOWN</button>
-          <button id="reset" onClick={this.reset}>reset</button>
+          <button id="left" onClick={() => this.move(moveLeft)}>LEFT</button>
+          <button id="up" onClick={() => this.move(moveUp)}>UP</button>
+          <button id="right" onClick={() => this.move(moveRight)}>RIGHT</button>
+          <button id="down" onClick={() => this.move(moveDown)}>DOWN</button>
+          <button id="reset" onClick={() => this.setState(initialState)}>reset</button>
         </div>
         <form onSubmit={this.onSubmit}>
           <input
